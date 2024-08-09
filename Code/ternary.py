@@ -1,12 +1,11 @@
-import csv
 import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 class Node:
     """A node in the Ternary structure."""
-    def __init__(self, text='', left=None, equal=None, right=None, is_end_of_string=False):
-        self.text = text
+    def __init__(self, data='', left=None, equal=None, right=None, is_end_of_string=False):
+        self.data = data
         # Has 3 pointers for left (less), equal (equal), right (greater) - similar to binary tree
         self.left = left
         self.equal = equal
@@ -21,30 +20,25 @@ class TernaryTree:
 
 
     def insert(self, word):
-        """Insert a word into the tree."""
-        # Check if tree is empty
-        if not self.root:
-            self.root = Node(word[0])
+        """Inserts a word into the ternary tree."""
+        self.root = self._insert(self.root, word, 0)
 
-        current = self.root
-        i = 0
-        while i < len(word):
-            if word[i] < current.data: 
-                if not current.left:
-                    current.left = Node(word[i])
-                current = current.left
-            elif word[i] > current.data: 
-                if not current.right:
-                    current.right = Node(word[i])
-                current = current.right 
-            else: 
-                if i == len(word) - 1: 
-                    current.isEndOfString = True
-                    break
-                if not current.equal:
-                    current.equal = Node(word[i + 1])
+    def _insert(self, node, word, index):
+        """Helper function to insert a word into the ternary tree."""
+        if node is None:
+            node = Node(data=word[index])
 
-                i = i + 1
+        if word[index] < node.data:
+            node.left = self._insert(node.left, word, index)
+        elif word[index] > node.data:
+            node.right = self._insert(node.right, word, index)
+        else:
+            if index + 1 == len(word):
+                node.is_end_of_string = True
+            else:
+                node.equal = self._insert(node.equal, word, index + 1)
+
+        return node
 
      
     def find(self, word):
@@ -65,6 +59,8 @@ class TernaryTree:
                 
     def starts_with(self, prefix):
         """Return a list of all words starting with the given prefix."""
+        if not prefix:
+            prefix = ''
         node = self._search_prefix(self.root, prefix, 0)
         results = []
         if node:
@@ -79,9 +75,9 @@ class TernaryTree:
         if node is None:
             return None
 
-        if prefix[index] < node.text:
+        if prefix[index] < node.data:
             return self._search_prefix(node.left, prefix, index)
-        elif prefix[index] > node.text:
+        elif prefix[index] > node.data:
             return self._search_prefix(node.right, prefix, index)
         else:
             if index + 1 == len(prefix):
@@ -96,9 +92,9 @@ class TernaryTree:
         self._collect_words(node.left, prefix, results)
 
         if node.is_end_of_string:
-            results.append(prefix + node.text)
+            results.append(prefix + node.data)
 
-        self._collect_words(node.equal, prefix + node.text, results)
+        self._collect_words(node.equal, prefix + node.data, results)
 
         self._collect_words(node.right, prefix, results)
 
@@ -123,14 +119,18 @@ class TernaryTree:
         graph = nx.DiGraph()
         current = self.root
 
-        # Start from the given prefix
+        # Traverse the tree starting from the given prefix
         for char in prefix:
-            if char in current.children:
-                current = current.children[char]
+            if not current:
+                return  # Prefix not in Ternary Tree
+            if char < current.data:
+                current = current.left
+            elif char > current.data:
+                current = current.right
             else:
-                return  # Prefix not in Trie
+                current = current.equal
 
-        self.__add_nodes(graph, current, "root")
+        self.__add_nodes(graph, current, prefix)
 
         # Use spring layout for better visualization
         pos = nx.spring_layout(graph)
@@ -177,16 +177,16 @@ class TernaryTree:
 
         fig = go.Figure(data=[edge_trace, node_trace],
                         layout=go.Layout(
-                            title=f'Trie Visualization (Prefix: {prefix})',
+                            title=f'Ternary Tree Visualization (Prefix: {prefix})',
                             titlefont_size=16,
                             showlegend=False,
                             hovermode='closest',
-                            margin=dict(b=20,l=5,r=5,t=40),
+                            margin=dict(b=20, l=5, r=5, t=40),
                             annotations=[dict(
-                                text="Trie Visualization",
+                                text="Ternary Tree Visualization",
                                 showarrow=False,
                                 xref="paper", yref="paper",
-                                x=0.005, y=-0.002 )],
+                                x=0.005, y=-0.002)],
                             xaxis=dict(showgrid=False, zeroline=False),
                             yaxis=dict(showgrid=False, zeroline=False))
                         )
@@ -194,9 +194,27 @@ class TernaryTree:
 
     def __add_nodes(self, graph, node, node_id):
         """Helper method to add nodes to the networkx graph."""
-        for char, child in node.children.items():
-            child_id = node_id + char
-            label = f"{char} ({child.text})" if child.is_word else char
-            graph.add_node(child_id, label=label)
-            graph.add_edge(node_id, child_id)
-            self.__add_nodes(graph, child, child_id)
+        if node is None:
+            return
+
+        # Add the current node
+        label = f"{node.data} (End)" if node.is_end_of_string else node.data
+        graph.add_node(node_id, label=label)
+
+        # Add left child
+        if node.left:
+            left_id = node_id + "L"
+            graph.add_edge(node_id, left_id)
+            self.__add_nodes(graph, node.left, left_id)
+
+        # Add equal child
+        if node.equal:
+            equal_id = node_id + node.data
+            graph.add_edge(node_id, equal_id)
+            self.__add_nodes(graph, node.equal, equal_id)
+
+        # Add right child
+        if node.right:
+            right_id = node_id + "R"
+            graph.add_edge(node_id, right_id)
+            self.__add_nodes(graph, node.right, right_id)
