@@ -28,5 +28,6 @@ In the Code folder, we implement classes for Trie, Ternary and Radix tree. Each 
 ## How to run
 To run the code:
 ```
-python3 app.py
+cd Code
+python3 main.py
 ```
