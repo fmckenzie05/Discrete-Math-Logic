@@ -1,4 +1,4 @@
-# from tries_1 import TrieNode
+from tries import PrefixTree
 from ternary import TernaryTree
 
 import csv
@@ -15,7 +15,7 @@ def visualize(csv_file_path, tree):
             tree.insert(word)
 
     # Prompt user for input
-    prefix = input("Enter a prefix to search for (or leave blank to see the whole Trie): ")
+    prefix = input("Enter a prefix to search for (or leave blank to see the whole tree): ")
 
     # Find and display words starting with the given prefix
     results = tree.starts_with(prefix)
@@ -29,8 +29,19 @@ def main():
 
     # Initialize the Trie
     # trie = PrefixTree()
-    ternary = TernaryTree()
-    visualize(csv_file_path, ternary)
+    print("1. Trie\n2. Ternary\n3. Radix")
+    tree_selection = None
+    while tree_selection != 1 and tree_selection != 2 and tree_selection != 3:
+        tree_selection = int(input("Choose your tree: "))
+    
+    if tree_selection == 1:
+        tree = PrefixTree()
+    elif tree_selection == 2:
+        tree = TernaryTree()
+    elif tree_selection == 3:
+        tree = None
+
+    visualize(csv_file_path, tree)
 
 if __name__ == "__main__":
         main()

@@ -1,5 +1,4 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 class Node:
@@ -59,10 +58,12 @@ class TernaryTree:
                 
     def starts_with(self, prefix):
         """Return a list of all words starting with the given prefix."""
-        if not prefix:
-            prefix = ''
-        node = self._search_prefix(self.root, prefix, 0)
         results = []
+        if not prefix:
+            self._collect_words(self.root, '', results)
+            return results
+        
+        node = self._search_prefix(self.root, prefix, 0)
         if node:
             if node.is_end_of_string:
                 results.append(prefix)
@@ -74,7 +75,6 @@ class TernaryTree:
         """Helper function to search for the node that matches the end of the prefix."""
         if node is None:
             return None
-
         if prefix[index] < node.data:
             return self._search_prefix(node.left, prefix, index)
         elif prefix[index] > node.data:
@@ -115,22 +115,15 @@ class TernaryTree:
 
     # ------------------------------- todo -----------------------------------------
     def visualize(self, prefix=''):
-        """Visualize the Ternary tree using plotly for interactivity."""
+        """Visualizes the ternary tree using NetworkX and Plotly."""
+        # Create a directed graph
         graph = nx.DiGraph()
-        current = self.root
 
-        # Traverse the tree starting from the given prefix
-        for char in prefix:
-            if not current:
-                return  # Prefix not in Ternary Tree
-            if char < current.data:
-                current = current.left
-            elif char > current.data:
-                current = current.right
-            else:
-                current = current.equal
-
-        self.__add_nodes(graph, current, prefix)
+        current = self._search_prefix(self.root, prefix, 0)
+        if not current:
+            print("Prefix not in tree")
+            return
+        self.__add_nodes(graph, node=current, node_id="Root")
 
         # Use spring layout for better visualization
         pos = nx.spring_layout(graph)
