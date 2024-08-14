@@ -1,11 +1,11 @@
-from tries import PrefixTree
-from ternary import TernaryTree
+from tree.tries import PrefixTree
+from tree.ternary import TernaryTree
 
 import csv
 
 
 # For testing visualization
-def visualize(csv_file_path, tree):
+def helper(csv_file_path, tree):
     
     # Read words from the CSV file and insert them into the Trie
     with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
@@ -23,9 +23,9 @@ def visualize(csv_file_path, tree):
 
     # Visualize the tree
     tree.visualize(prefix)
+    return results
 
-def main():
-    csv_file_path = '4000-most-common-english-words-csv.csv'
+def visualize(csv_file_path='data/4000-most-common-english-words-csv.csv'):
 
     # Initialize the Trie
     # trie = PrefixTree()
@@ -41,8 +41,8 @@ def main():
     elif tree_selection == 3:
         tree = None
 
-    visualize(csv_file_path, tree)
+    return helper(csv_file_path, tree)
 
-if __name__ == "__main__":
-        main()
+
+
 
