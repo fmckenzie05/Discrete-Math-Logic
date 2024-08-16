@@ -11,7 +11,7 @@ class TrieNode:
         self.is_word = False
 
 class PrefixTree:
-    """A Trie for storing and querying strings efficiently."""
+    """A Trie to store and querying strings efficiently."""
     
     def __init__(self):
         self.root = TrieNode()
