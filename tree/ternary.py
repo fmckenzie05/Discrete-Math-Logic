@@ -16,6 +16,7 @@ class Node:
 class TernaryTree:
     def __init__(self):
         self.root = Node()
+        self.name = "Ternary"
 
 
     def insert(self, word):

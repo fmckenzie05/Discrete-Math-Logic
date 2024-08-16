@@ -14,6 +14,7 @@ class RadixTree:
     
     def __init__(self):
         self.root = RadixNode()
+        self.name = "Radix"
 
     def insert(self, word):
         """Insert a word into the Radix Tree, with debug output."""

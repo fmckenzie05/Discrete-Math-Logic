@@ -1,5 +1,6 @@
 from tree.tries import PrefixTree
 from tree.ternary import TernaryTree
+from tree.radix import RadixTree
 
 import csv
 
@@ -33,6 +34,8 @@ def visualize(csv_file_path='data/4000-most-common-english-words-csv.csv', tree_
     elif tree_selection == 2:
         tree = TernaryTree()
     elif tree_selection == 3:
-        tree = None
+        tree = RadixTree()
+    else:
+        raise Exception("Invalid")
 
     return helper(csv_file_path, tree, prefix)
