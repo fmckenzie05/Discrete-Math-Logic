@@ -183,7 +183,7 @@ class TernaryTree:
                             xaxis=dict(showgrid=False, zeroline=False),
                             yaxis=dict(showgrid=False, zeroline=False))
                         )
-        fig.show()
+        return fig
 
     def __add_nodes(self, graph, node, node_id):
         """Helper method to add nodes to the networkx graph."""

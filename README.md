@@ -26,8 +26,6 @@ In the Code folder, we implement classes for Trie, Ternary and Radix tree. Each 
 * `visualize`: visualize the tree with nodes
 
 ## How to run
-To run the code:
 ```
-cd Code
-python3 main.py
+streamlit run app.py
 ```
