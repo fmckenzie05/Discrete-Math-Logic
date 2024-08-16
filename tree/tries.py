@@ -1,4 +1,3 @@
-import csv
 import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
@@ -11,10 +10,11 @@ class TrieNode:
         self.is_word = False
 
 class PrefixTree:
-    """A Trie for storing and querying strings efficiently."""
+    """A Trie to store and query strings efficiently."""
     
     def __init__(self):
         self.root = TrieNode()
+        self.name = "Trie"
 
     def insert(self, word):
         """Insert a word into the Trie."""
@@ -134,7 +134,7 @@ class PrefixTree:
                             xaxis=dict(showgrid=False, zeroline=False),
                             yaxis=dict(showgrid=False, zeroline=False))
                         )
-        fig.show()
+        return fig
 
     def __add_nodes(self, graph, node, node_id):
         """Helper method to add nodes to the networkx graph."""

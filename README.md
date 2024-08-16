@@ -26,6 +26,28 @@ In the Code folder, we implement classes for Trie, Ternary and Radix tree. Each 
 * `visualize`: visualize the tree with nodes
 
 ## How to run
+1. Create a virtual env
+* Install virtualenv (skip if you already installed it)
+```
+pip install virtualenv
+```
+* Create and activate the virtualenv
+```
+virtualenv myenv
+
+<!-- MacOS/Linux -->
+source myenv/bin/activate
+
+<!-- Windows -->
+source myenv/bin/activate
+```
+
+2. Install libraries / pacakges
+```
+pip install -r requirements.txt
+```
+
+3. Run the application
 ```
 streamlit run app.py
 ```
