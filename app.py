@@ -13,8 +13,7 @@ def create_wordcloud(words):
 
 # -- Set page config
 apptitle = 'Tree visualizer'
-
-st.set_page_config(page_title=apptitle, page_icon=":evergreen_tree:")
+st.set_page_config(page_title=apptitle, page_icon=":evergreen_tree:", layout="wide")
 
 # -- Default detector list
 detectorlist = ['H1','L1', 'V1']
@@ -49,38 +48,49 @@ st.sidebar.markdown("## Select Tree data structure")
 # else:
 #     tree_option = 3
 
+tree_options = {
+    'Trie': 1,
+    'Ternary': 2,
+    'Radix': 3
+}
+selected_trees = [tree for tree in tree_options if st.sidebar.checkbox(tree, value=False)]
+# tree_selections = [tree_options[tree] for tree in selected_trees]
+
 
 #-- Set prefix
 st.sidebar.markdown("## Select a prefix")
 st.sidebar.markdown("""Choose a prefix. Leave blank if you want to list all possible words""")
 prefix = st.sidebar.text_input(label='Prefix', value='') 
 
-if st.sidebar.button(label='Autocomplete and graph'):
-    
-    try:
-        st.markdown("## Trie data structure")
-        trie_results, trie_fig = visualize(csv_file_path=file, tree_selection=1, prefix=prefix)
-        st.plotly_chart(trie_fig)
-        create_wordcloud(trie_results)
-    except:
-        st.markdown("""Trie error""")
-    
-    try:
-        st.markdown("## Ternary data structure")
-        ternary_results, ternary_fig = visualize(csv_file_path=file, tree_selection=2, prefix=prefix)
-        st.plotly_chart(ternary_fig)
-        create_wordcloud(ternary_results)
 
-    except:
-        st.markdown("""Ternary error""")
+# Main screen
+tab_visualize, tab_metrics = st.tabs(["Visualize", "Metrics"])
 
-    try:
-        st.markdown("## Trie data structure")
-        radix_results, radix_fig = visualize(csv_file_path=file, tree_selection=3, prefix=prefix)
-        st.plotly_chart(radix_fig)
-        create_wordcloud(radix_results)
-    except:
-        st.markdown("""Radix error""")
+# Store tree metrics
+tree_metrics = {}
+with tab_visualize:
+    if st.sidebar.button(label='Autocomplete and graph'):
+        col1, col2 = st.columns(2)
+        for tree_key in selected_trees:
+            tree_value = tree_options[tree_key]
+            try:
+                results, fig = visualize(csv_file_path=file, tree_selection=tree_value, prefix=prefix)
+
+                with col1:
+                    st.markdown(f"## {tree_key} data structure")
+                    st.plotly_chart(fig)
+                with col2:
+                    # Explicitly pass the figure objects
+                    st.markdown(f"## {tree_key} found words")
+                    wordcloud_fig = create_wordcloud(results)
+
+            except Exception as e:
+                st.markdown(f"**Error with {tree_key}**: {str(e)}")
+
+# Show tree metrics
+with tab_metrics:
+    st.markdown("Hihi")
+
 
 
 
