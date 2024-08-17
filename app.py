@@ -47,6 +47,7 @@ st.sidebar.markdown("## Select Tree data structure")
 #     tree_option = 2
 # else:
 #     tree_option = 3
+
 tree_options = {
     'Trie': 1,
     'Ternary': 2,
@@ -54,6 +55,7 @@ tree_options = {
 }
 selected_trees = [tree for tree in tree_options if st.sidebar.checkbox(tree, value=False)]
 # tree_selections = [tree_options[tree] for tree in selected_trees]
+
 
 #-- Set prefix
 st.sidebar.markdown("## Select a prefix")
@@ -88,6 +90,7 @@ with tab_visualize:
 # Show tree metrics
 with tab_metrics:
     st.markdown("Hihi")
+
 
 
 
