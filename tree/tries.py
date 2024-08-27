@@ -36,22 +36,26 @@ class PrefixTree:
         return current if current.is_word else None
 
     def starts_with(self, prefix):
-        """Return a list of all words starting with the given prefix."""
+        """Return a list of all words starting with the given prefix and count nodes traversed."""
         words = list()
         current = self.root
+        nodes_traversed = 0
         for char in prefix:
             if char not in current.children:
-                return list()
+                return list(), nodes_traversed
             current = current.children[char]
-        self.__child_words_for(current, words)
-        return words
+            nodes_traversed += 1
+        nodes_traversed += self.__child_words_for(current, words)
+        return words, nodes_traversed
 
     def __child_words_for(self, node, words):
-        """Helper method to collect all words under a given node."""
+        """Helper method to collect all words under a given node and count nodes traversed."""
+        nodes_traversed = 1  # Start by counting the current node
         if node.is_word:
             words.append(node.text)
         for letter in node.children:
-            self.__child_words_for(node.children[letter], words)
+            nodes_traversed += self.__child_words_for(node.children[letter], words)
+        return nodes_traversed
 
     def size(self, current=None):
         """Return the total number of nodes in the Trie."""

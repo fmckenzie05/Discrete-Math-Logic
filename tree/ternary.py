@@ -5,19 +5,16 @@ class Node:
     """A node in the Ternary structure."""
     def __init__(self, data='', left=None, equal=None, right=None, is_end_of_string=False):
         self.data = data
-        # Has 3 pointers for left (less), equal (equal), right (greater) - similar to binary tree
         self.left = left
         self.equal = equal
         self.right = right
-        # If it's end of String
         self.is_end_of_string = is_end_of_string
-
 
 class TernaryTree:
     def __init__(self):
         self.root = Node()
         self.name = "Ternary"
-
+        self.traversed_nodes = 0  # Counter for traversed nodes
 
     def insert(self, word):
         """Inserts a word into the ternary tree."""
@@ -40,42 +37,47 @@ class TernaryTree:
 
         return node
 
-     
     def find(self, word):
         """Find and return the node representing the word, or None if not found."""
+        self.traversed_nodes = 0  # Reset the counter before the search
         current = self.root
         i = 0
 
         while i < len(word):
+            self.traversed_nodes += 1  # Increment the counter for each node visited
             if word[i] < current.data and current.left:
                 current = current.left
             elif word[i] > current.data and current.right:
                 current = current.right
             elif word[i] == current.data and current.equal:
                 current = current.equal
-                i = i + 1
+                i += 1
             else:
                 return None
-                
+
+        return current if current.is_end_of_string else None
+
     def starts_with(self, prefix):
         """Return a list of all words starting with the given prefix."""
+        self.traversed_nodes = 0  # Reset before each search
         results = []
         if not prefix:
             self._collect_words(self.root, '', results)
-            return results
+            return results, self.traversed_nodes
         
         node = self._search_prefix(self.root, prefix, 0)
         if node:
             if node.is_end_of_string:
                 results.append(prefix)
             self._collect_words(node.equal, prefix, results)
-        return results
         
+        return results, self.traversed_nodes
 
     def _search_prefix(self, node, prefix, index):
         """Helper function to search for the node that matches the end of the prefix."""
         if node is None:
             return None
+        self.traversed_nodes += 1  # Increment nodes traversed
         if prefix[index] < node.data:
             return self._search_prefix(node.left, prefix, index)
         elif prefix[index] > node.data:
@@ -99,14 +101,12 @@ class TernaryTree:
 
         self._collect_words(node.right, prefix, results)
 
-
     def size(self, current=None):
-        """Return the total number of nodes in the Ternary tree"""
+        """Return the total number of nodes in the Ternary tree."""
         if not current:
             current = self.root
-        
         return 1 + self._size(current.left) + self._size(current.equal) + self._size(current.right)
-    
+
     def _size(self, current):
         """Helper function to calculate all nodes from a given node."""
         if not current:
@@ -114,7 +114,6 @@ class TernaryTree:
         else:
             return 1 + self._size(current.left) + self._size(current.equal) + self._size(current.right)
 
-    # ------------------------------- todo -----------------------------------------
     def visualize(self, prefix=''):
         """Visualizes the ternary tree using NetworkX and Plotly."""
         # Create a directed graph

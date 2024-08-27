@@ -2,33 +2,32 @@ from tree.tries import PrefixTree
 from tree.ternary import TernaryTree
 from tree.radix import RadixTree
 
-import csv
+import time
 
+def helper(words, tree, prefix):
+    # Measure insertion time
+    start_time = time.time()
+    for word in words:
+        tree.insert(word)
+    insertion_time = (time.time() - start_time) * 1000  # Convert to milliseconds
 
-# For testing visualization
-def helper(csv_file_path, tree, prefix):
-    
-    # Read words from the CSV file and insert them into the Trie
-    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            word = row[0].strip()  # Use strip() to remove any leading/trailing whitespace
-            tree.insert(word)
-
-
-    # Find and display words starting with the given prefix
-    results = tree.starts_with(prefix)
-    print(f"Words starting with '{prefix}': {results}")
+    # Measure retrieval time
+    start_time = time.time()
+    results, nodes_traversed = tree.starts_with(prefix)
+    retrieval_time = (time.time() - start_time) * 1000  # Convert to milliseconds
 
     # Visualize the tree
     fig = tree.visualize(prefix)
-    print(fig)
-    return results, fig
 
-def visualize(csv_file_path='data/4000-most-common-english-words-csv.csv', tree_selection=1, prefix=''):
+    # Get total node count
+    total_nodes = tree.size()
 
-    # Initialize the Trie
-    # trie = PrefixTree()
+    # Return all metrics and results
+    return results, fig, nodes_traversed, total_nodes, insertion_time, retrieval_time
+
+
+def visualize(words, tree_selection=1, prefix=''):
+    # Initialize the appropriate tree
     if tree_selection == 1:
         tree = PrefixTree()
     elif tree_selection == 2:
@@ -36,6 +35,6 @@ def visualize(csv_file_path='data/4000-most-common-english-words-csv.csv', tree_
     elif tree_selection == 3:
         tree = RadixTree()
     else:
-        raise Exception("Invalid")
+        raise Exception("Invalid tree selection")
 
-    return helper(csv_file_path, tree, prefix)
+    return helper(words, tree, prefix)

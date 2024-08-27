@@ -15,10 +15,10 @@ class RadixTree:
     def __init__(self):
         self.root = RadixNode()
         self.name = "Radix"
+        self.traversed_nodes = 0 
 
     def insert(self, word):
         """Insert a word into the Radix Tree, with debug output."""
-        print(f"Inserting word: {word}")
         current = self.root
         while word:
             found = False
@@ -26,12 +26,10 @@ class RadixTree:
                 common_prefix = self._longest_common_prefix(word, child.text)
                 if common_prefix:
                     found = True
-                    print(f"Common prefix found: '{common_prefix}' with child: '{child.text}'")
                     if common_prefix == child.text:
                         current = child
                         word = word[len(common_prefix):]
                     else:
-                        print(f"Splitting node '{child.text}' at '{common_prefix}'")
                         self._split_node(current, child, common_prefix)
                         current = current.children[common_prefix[0]]
                         word = word[len(common_prefix):]
@@ -42,7 +40,6 @@ class RadixTree:
                 current = new_node
                 word = ''
         current.is_word = True
-        print(f"Finished inserting word. Final node text: '{current.text}', is_word: {current.is_word}")
 
     def _split_node(self, parent, node, common_prefix):
         # Split the node at the common prefix, adjusting both the node and its new child
@@ -58,11 +55,9 @@ class RadixTree:
         # Ensure the parent's reference to this node is updated if needed
         parent.children[common_prefix[0]] = node
 
-        print(f"Node split: '{node.text}' now has child '{new_child.text}'")
 
     def _log_tree(self, node, prefix):
         full_word = prefix + node.text
-        print(f"Node '{full_word}', is_word: {node.is_word}, children: {[child.text for child in node.children.values()]}")
         for child in node.children.values():
             self._log_tree(child, full_word)
 
@@ -74,12 +69,10 @@ class RadixTree:
         return word1[:min_len]
 
     def _collect_words(self, node, accumulated_prefix, results, original_prefix=''):
-        print(f"_collect_words called with node.text: {node.text}, accumulated_prefix: {accumulated_prefix}, original_prefix: {original_prefix}")
 
         if node.is_word:
             full_word = accumulated_prefix + node.text
             results.append(full_word)
-            print(f"  Word found: {full_word}")
 
         for child_char, child in node.children.items():
             if original_prefix and child_char == original_prefix[0]:
@@ -94,34 +87,32 @@ class RadixTree:
                     new_accumulated_prefix = accumulated_prefix
                 new_original_prefix = '' if original_prefix else original_prefix
 
-            print(f"  Recursing with child.text: {child.text}, new_accumulated_prefix: {new_accumulated_prefix}, original_prefix: {new_original_prefix}")
             self._collect_words(child, new_accumulated_prefix, results, new_original_prefix)
 
 
 
     def starts_with(self, prefix):
+        self.traversed_nodes = 0  # Reset before each search
         current = self.root
         path_to_current = ''
-        original_prefix = prefix 
+        original_prefix = prefix
+        
         while prefix:
             found = False
             for child in current.children.values():
+                self.traversed_nodes += 1  # Increment nodes traversed
                 if prefix.startswith(child.text):
-                    print(f"Match found with node '{child.text}'. Moving deeper.")
                     path_to_current += child.text
                     current = child
                     prefix = prefix[len(child.text):]
                     found = True
                     break
             if not found:
-                print(f"Prefix '{prefix}' not found.")
-                return []
+                return [], self.traversed_nodes  # No match found, return empty list and nodes traversed
 
         results = []
-        print(f"Calling _collect_words with path_to_current: {path_to_current}, original_prefix: {original_prefix}")
         self._collect_words(current, path_to_current, results, original_prefix)
-        print(f"Words collected from full match: {results}")
-        return results
+        return results, self.traversed_nodes 
 
 
 
@@ -201,3 +192,8 @@ class RadixTree:
             graph.add_edge(node_id, child_id)
             self._add_nodes(graph, child, child_id)
 
+    def size(self, current=None):
+        """Return the total number of nodes in the Radix Tree."""
+        if not current:
+            current = self.root
+        return 1 + sum(self.size(child) for child in current.children.values())
