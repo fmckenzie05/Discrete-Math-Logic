@@ -3,6 +3,8 @@ import pandas as pd
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from visualize import visualize
+import concurrent.futures
+
 
 def create_wordcloud(words):
     wordcloud = WordCloud(width=800, height=400, background_color="white").generate(" ".join(words))
@@ -31,27 +33,70 @@ if choice == "4000 english common words":
 elif choice == "400.000 english common words":
     file = 'data/words.csv'
     df = pd.read_csv(file, header=None, names=['word'])
-elif choice == "Upload a CSV file":
-    # Allow the user to upload a file
-    uploaded_file = st.file_uploader("Upload your file", type="csv")
-    if uploaded_file is not None:
-        # Read and display the uploaded file
-        df = pd.read_csv(uploaded_file)
-        # Drop any rows with NaN values
-        df = df.dropna()
+    df = df.dropna()
+    df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
+    df = df[df['word'].str.isalpha()] # Filter out non-alphabetic words
+# elif choice == "Upload a CSV file":
+#     # Allow the user to upload a file
+#     uploaded_file = st.file_uploader("Upload your file", type="csv")
+#     if uploaded_file is not None:
+#         # Read and display the uploaded file
+#         df = pd.read_csv(uploaded_file)
+#         # Ensure the 'word' column exists and process it
+#         if 'word' in df.columns:
+#             df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
+#             df = df[df['word'].str.isalpha()]  # Filter out non-alphabetic words
+#             df = df['word']  # Keep only the 'word' column
+#             df.reset_index()
+#         else:
+#             st.error("The uploaded file does not contain a 'word' column.")
 
-        df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
-        df = df[df['word'].str.isalpha()] # Filter out non-alphabetic words
-
-
-        st.write("Displaying Uploaded File:")
-        st.dataframe(df)
 
 ## Select dataset
 st.sidebar.markdown("## Select Number of Words")
         # Add a slider to allow users to select a subset of words from the dataset
 num_words = 0
+def process_tree_visualization(tree_key, visualizations):
+    if tree_key in visualizations:
+        results, fig = visualizations[tree_key]
+        return tree_key, results, fig
+    return None
+def run_analysis():
+    """Function to run the analysis and store metrics."""
+    for tree_key in selected_trees:
+        tree_value = tree_options[tree_key]
+        try:
+            # Capture all the metrics from visualize function
+            results, fig, nodes_traversed, total_nodes, insertion_time, retrieval_time = visualize(
+                words=filtered_df.iloc[:, 0].tolist(), 
+                tree_selection=tree_value, 
+                prefix=prefix
+            )
+
+            # Store the metrics for this tree
+            metrics[tree_key] = {
+                'Insertion Time (ms)': insertion_time,
+                'Retrieval Time (ms)': retrieval_time,
+                'Total Nodes': total_nodes,
+                'Nodes Traversed': nodes_traversed
+            }
+
+            # Display visualizations in the Visualize tab
+            with tab_visualize:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"## {tree_key} data structure")
+                    st.plotly_chart(fig)
+                with col2:
+                    st.markdown(f"## {tree_key} found words")
+                    wordcloud_fig = create_wordcloud(results)
+
+        except Exception as e:
+            st.markdown(f"**Error with {tree_key}**: {str(e)}")
+
 if df is not None:
+    st.write("Displaying File:")
+    st.dataframe(df)
     num_words = st.sidebar.slider(
         "Number of words to visualize",
         min_value=100,
@@ -84,40 +129,6 @@ if df is not None:
     metrics = {}
     visualizations = {}
 
-    def run_analysis():
-        """Function to run the analysis and store metrics."""
-        for tree_key in selected_trees:
-            tree_value = tree_options[tree_key]
-            try:
-                # Capture all the metrics from visualize function
-                results, fig, nodes_traversed, total_nodes, insertion_time, retrieval_time = visualize(
-                    words=filtered_df.iloc[:, 0].tolist(), 
-                    tree_selection=tree_value, 
-                    prefix=prefix
-                )
-
-                # Store the metrics for this tree
-                metrics[tree_key] = {
-                    'Insertion Time (ms)': insertion_time,
-                    'Retrieval Time (ms)': retrieval_time,
-                    'Total Nodes': total_nodes,
-                    'Nodes Traversed': nodes_traversed
-                }
-
-                # Display visualizations in the Visualize tab
-                with tab_visualize:
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown(f"## {tree_key} data structure")
-                        st.plotly_chart(fig)
-                    with col2:
-                        st.markdown(f"## {tree_key} found words")
-                        wordcloud_fig = create_wordcloud(results)
-
-            except Exception as e:
-                st.markdown(f"**Error with {tree_key}**: {str(e)}")
-
-
 
     # Main screen
     tab_visualize, tab_metrics = st.tabs(["Visualize", "Metrics"])
@@ -129,17 +140,25 @@ if df is not None:
     with tab_visualize:
         if visualizations:
             st.markdown("### Visualization Results")
-            for tree_key in selected_trees:
-                if tree_key in visualizations:
-                    results, fig = visualizations[tree_key]
+
+            # Run visualizations in parallel
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(process_tree_visualization, tree_key, visualizations) for tree_key in selected_trees]
+                results_list = [future.result() for future in concurrent.futures.as_completed(futures)]
+
+            # Display results
+            for result in results_list:
+                if result is not None:
+                    tree_key, results, fig = result
                     col1, col2 = st.columns(2)
-                    with st.container:
+                    with st.container():
                         with col1:
                             st.markdown(f"## {tree_key} data structure")
                             st.plotly_chart(fig)
                         with col2:
                             st.markdown(f"## {tree_key} found words")
                             create_wordcloud(results)
+
 
     # Initialize the merged metrics dictionary
     merged_metrics = {
