@@ -6,6 +6,7 @@ from visualize import visualize
 import concurrent.futures
 
 
+#------------------FUNCTIONS-------------------------------------
 def create_wordcloud(words):
     wordcloud = WordCloud(width=800, height=400, background_color="white").generate(" ".join(words))
     fig, ax = plt.subplots()
@@ -13,7 +14,68 @@ def create_wordcloud(words):
     plt.axis("off")
     st.pyplot(fig)
 
-# -- Set page config
+
+def run_analysis():
+    """Function to run the analysis and store metrics."""
+    merged_metrics = {
+            'Insertion Time (ms)': [],
+            'Retrieval Time (ms)': [],
+            'Total Nodes': [],
+            'Nodes Traversed': []
+        }
+    
+    tree_names = []
+
+    for tree_key in selected_trees:
+        tree_value = tree_options[tree_key]
+        try:
+            # Capture all the metrics from visualize function
+            results, fig, nodes_traversed, total_nodes, insertion_time, retrieval_time = visualize(
+                words=filtered_df.iloc[:, 0].tolist(), 
+                tree_selection=tree_value, 
+                prefix=prefix
+            )
+            tree_names.append(tree_key)
+            merged_metrics['Insertion Time (ms)'].append(insertion_time)
+            merged_metrics['Retrieval Time (ms)'].append(retrieval_time)
+            merged_metrics['Total Nodes'].append(total_nodes)
+            merged_metrics['Nodes Traversed'].append(nodes_traversed)
+
+            # Display visualizations in the Visualize tab
+            with tab_visualize:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"## {tree_key} data structure")
+                    st.plotly_chart(fig)
+                with col2:
+                    st.markdown(f"## {tree_key} found words")
+                    wordcloud_fig = create_wordcloud(results)
+        except Exception as e:
+            st.markdown(f"**Error with {tree_key}**: {str(e)}")
+
+    with tab_metrics:
+        st.markdown("### Tree Metrics")
+        if merged_metrics:
+            metrics_df = pd.DataFrame(merged_metrics, index=tree_names).T
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(metrics_df)
+            with col2:
+                st.markdown("### Metrics Comparison")
+
+                for metric_key in metrics_df.index:
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    ax.plot(metrics_df.columns, metrics_df.loc[metric_key], marker='o', label=metric_key)
+                    ax.set_xlabel('Trees')
+                    ax.set_ylabel('Values')
+                    ax.set_title(f'Comparison of {metric_key}')
+                    ax.legend()
+                    ax.grid(True)
+                    st.pyplot(fig)
+        else:
+            st.markdown("No metrics collected yet. Please click the 'Run' button.")
+
+# ----------------------Set page config -------------------------------------------
 apptitle = 'Tree visualizer'
 st.set_page_config(page_title=apptitle, page_icon=":evergreen_tree:", layout="wide")
 
@@ -56,43 +118,7 @@ elif choice == "400.000 english common words":
 st.sidebar.markdown("## Select Number of Words")
         # Add a slider to allow users to select a subset of words from the dataset
 num_words = 0
-def process_tree_visualization(tree_key, visualizations):
-    if tree_key in visualizations:
-        results, fig = visualizations[tree_key]
-        return tree_key, results, fig
-    return None
-def run_analysis():
-    """Function to run the analysis and store metrics."""
-    for tree_key in selected_trees:
-        tree_value = tree_options[tree_key]
-        try:
-            # Capture all the metrics from visualize function
-            results, fig, nodes_traversed, total_nodes, insertion_time, retrieval_time = visualize(
-                words=filtered_df.iloc[:, 0].tolist(), 
-                tree_selection=tree_value, 
-                prefix=prefix
-            )
 
-            # Store the metrics for this tree
-            metrics[tree_key] = {
-                'Insertion Time (ms)': insertion_time,
-                'Retrieval Time (ms)': retrieval_time,
-                'Total Nodes': total_nodes,
-                'Nodes Traversed': nodes_traversed
-            }
-
-            # Display visualizations in the Visualize tab
-            with tab_visualize:
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(f"## {tree_key} data structure")
-                    st.plotly_chart(fig)
-                with col2:
-                    st.markdown(f"## {tree_key} found words")
-                    wordcloud_fig = create_wordcloud(results)
-
-        except Exception as e:
-            st.markdown(f"**Error with {tree_key}**: {str(e)}")
 
 if df is not None:
     st.write("Displaying File:")
@@ -124,10 +150,6 @@ if df is not None:
     st.sidebar.markdown("""Choose a prefix. Leave blank if you want to list all possible words""")
     prefix = st.sidebar.text_input(label='Prefix', value='')
 
-    # Initialize the metrics dictionary outside of any conditional blocks
-    # Initialize dictionaries to store metrics and visualizations separately
-    metrics = {}
-    visualizations = {}
 
 
     # Main screen
@@ -136,68 +158,3 @@ if df is not None:
     # Run button in the sidebar
     if st.sidebar.button(label='Run', key='run_analysis'):
         run_analysis()
-
-    with tab_visualize:
-        if visualizations:
-            st.markdown("### Visualization Results")
-
-            # Run visualizations in parallel
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = [executor.submit(process_tree_visualization, tree_key, visualizations) for tree_key in selected_trees]
-                results_list = [future.result() for future in concurrent.futures.as_completed(futures)]
-
-            # Display results
-            for result in results_list:
-                if result is not None:
-                    tree_key, results, fig = result
-                    col1, col2 = st.columns(2)
-                    with st.container():
-                        with col1:
-                            st.markdown(f"## {tree_key} data structure")
-                            st.plotly_chart(fig)
-                        with col2:
-                            st.markdown(f"## {tree_key} found words")
-                            create_wordcloud(results)
-
-
-    # Initialize the merged metrics dictionary
-    merged_metrics = {
-        'Insertion Time (ms)': [],
-        'Retrieval Time (ms)': [],
-        'Total Nodes': [],
-        'Nodes Traversed': []
-    }
-    # Merge the values from the metrics dictionary
-    tree_names = []
-    for tree_key, metric in metrics.items():
-        tree_names.append(tree_key)
-        for key in merged_metrics.keys():
-            merged_metrics[key].append(metric[key])
-
-
-    with tab_metrics:
-        st.markdown("### Tree Metrics")
-        if metrics:
-            col1, col2 = st.columns(2)
-            with col1:
-                for tree_key, metric in metrics.items():
-                    st.markdown(f"#### {tree_key}")
-                    st.write(pd.DataFrame.from_dict(metric, orient='index', columns=[tree_key]))
-            with col2:
-                st.markdown("### Metrics Comparison")
-
-                for metric_key, values in merged_metrics.items():
-                    fig, ax = plt.subplots(figsize=(10, 6))
-
-                    ax.plot(tree_names, values, marker='o', label=metric_key)
-                    ax.set_xlabel('Trees')
-
-                    ax.set_ylabel('Values')
-                    ax.set_title(f'Comparison of {metric_key}')
-                    ax.legend()
-                    ax.grid(True)
-
-
-                    st.pyplot(fig)
-        else:
-            st.markdown("No metrics collected yet. Please click the 'Run' button.")
