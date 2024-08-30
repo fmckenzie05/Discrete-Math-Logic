@@ -4,6 +4,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from visualize import visualize
 
+#------------------FUNCTIONS-------------------------------------
 
 def create_wordcloud(words):
     wordcloud = WordCloud(width=800, height=400, background_color="white").generate(" ".join(words))
@@ -12,49 +13,6 @@ def create_wordcloud(words):
     plt.axis("off")
     st.pyplot(fig)
 
-# -- Set page config
-apptitle = 'Tree visualizer'
-st.set_page_config(page_title=apptitle, page_icon=":evergreen_tree:", layout="wide")
-
-st.title('Tree nodes visualizer')
-
-# Sidebar
-
-## Select files:
-# file_options = ["4000 english common words", "400.000 english common words", "Upload a CSV file"]
-file_options = ["4000 english common words", "400.000 english common words"]
-choice = st.sidebar.selectbox("Choose a file option:", file_options)
-df = None
-# Handle the file choice
-if choice == "4000 english common words":
-    file = 'data/4000-most-common-english-words-csv.csv'
-    df = pd.read_csv(file, header=None, names=['word'])
-elif choice == "400.000 english common words":
-    file = 'data/words.csv'
-    df = pd.read_csv(file, header=None, names=['word'])
-    df = df.dropna()
-    df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
-    df = df[df['word'].str.isalpha()] # Filter out non-alphabetic words
-# elif choice == "Upload a CSV file":
-#     # Allow the user to upload a file
-#     uploaded_file = st.file_uploader("Upload your file", type="csv")
-#     if uploaded_file is not None:
-#         # Read and display the uploaded file
-#         df = pd.read_csv(uploaded_file)
-#         # Ensure the 'word' column exists and process it
-#         if 'word' in df.columns:
-#             df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
-#             df = df[df['word'].str.isalpha()]  # Filter out non-alphabetic words
-#             df = df['word']  # Keep only the 'word' column
-#             df.reset_index()
-#         else:
-#             st.error("The uploaded file does not contain a 'word' column.")
-
-
-## Select dataset
-st.sidebar.markdown("## Select Number of Words")
-        # Add a slider to allow users to select a subset of words from the dataset
-num_words = 0
 def run_analysis():
     """Function to run the analysis and store metrics."""
     merged_metrics = {
@@ -114,6 +72,51 @@ def run_analysis():
                     st.pyplot(fig)
         else:
             st.markdown("No metrics collected yet. Please click the 'Run' button.")
+
+# ----------------------Set page config -------------------------------------------
+apptitle = 'Tree visualizer'
+st.set_page_config(page_title=apptitle, page_icon=":evergreen_tree:", layout="wide")
+
+st.title('Tree nodes visualizer')
+
+# Sidebar
+
+## Select files:
+# file_options = ["4000 english common words", "400.000 english common words", "Upload a CSV file"]
+file_options = ["4000 english common words", "400.000 english common words"]
+choice = st.sidebar.selectbox("Choose a file option:", file_options)
+df = None
+# Handle the file choice
+if choice == "4000 english common words":
+    file = 'data/4000-most-common-english-words-csv.csv'
+    df = pd.read_csv(file, header=None, names=['word'])
+elif choice == "400.000 english common words":
+    file = 'data/words.csv'
+    df = pd.read_csv(file, header=None, names=['word'])
+    df = df.dropna()
+    df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
+    df = df[df['word'].str.isalpha()] # Filter out non-alphabetic words
+# elif choice == "Upload a CSV file":
+#     # Allow the user to upload a file
+#     uploaded_file = st.file_uploader("Upload your file", type="csv")
+#     if uploaded_file is not None:
+#         # Read and display the uploaded file
+#         df = pd.read_csv(uploaded_file)
+#         # Ensure the 'word' column exists and process it
+#         if 'word' in df.columns:
+#             df['word'] = df['word'].str.strip('\"')  # Remove any surrounding quotes
+#             df = df[df['word'].str.isalpha()]  # Filter out non-alphabetic words
+#             df = df['word']  # Keep only the 'word' column
+#             df.reset_index()
+#         else:
+#             st.error("The uploaded file does not contain a 'word' column.")
+
+
+## Select dataset
+st.sidebar.markdown("## Select Number of Words")
+        # Add a slider to allow users to select a subset of words from the dataset
+num_words = 0
+
 
 
 if df is not None:
