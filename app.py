@@ -3,15 +3,17 @@ import pandas as pd
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from visualize import visualize
+import concurrent.futures
+
 
 #------------------FUNCTIONS-------------------------------------
-
 def create_wordcloud(words):
     wordcloud = WordCloud(width=800, height=400, background_color="white").generate(" ".join(words))
     fig, ax = plt.subplots()
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     st.pyplot(fig)
+
 
 def run_analysis():
     """Function to run the analysis and store metrics."""
@@ -118,7 +120,6 @@ st.sidebar.markdown("## Select Number of Words")
 num_words = 0
 
 
-
 if df is not None:
     st.write("Displaying File:")
     st.dataframe(df)
@@ -150,10 +151,10 @@ if df is not None:
     prefix = st.sidebar.text_input(label='Prefix', value='')
 
 
+
     # Main screen
     tab_visualize, tab_metrics = st.tabs(["Visualize", "Metrics"])
 
     # Run button in the sidebar
     if st.sidebar.button(label='Run', key='run_analysis'):
         run_analysis()
-  
