@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from visualize import visualize
@@ -123,12 +124,28 @@ num_words = 0
 if df is not None:
     st.write("Displaying File:")
     st.dataframe(df)
-    num_words = st.sidebar.slider(
+
+    min_words = 1
+    max_words = len(df)
+
+    num_steps = 1000  # Adjust for granularity
+
+    # Generate logarithmically spaced values from min_words to max_words
+    log_spaced_values = np.geomspace(min_words, max_words, num_steps, dtype=int)
+
+    # Ensure the values are unique and sorted
+    log_spaced_values = np.unique(log_spaced_values)
+
+    # Ensure the default value (1000) is in the log_spaced_values
+    if 1000 not in log_spaced_values:
+        log_spaced_values = np.append(log_spaced_values, 1000)
+        log_spaced_values = np.sort(log_spaced_values)
+
+    # Create a slider with these log-spaced values
+    num_words = st.sidebar.select_slider(
         "Number of words to visualize",
-        min_value=100,
-        max_value=len(df),
-        value=1000,  # default value
-        step=100
+        options=log_spaced_values,
+        value=1000
     )
 
     df.head()
